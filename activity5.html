@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Weather App</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            padding: 20px;
+        }
+        .weather-container {
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Weather App</h1>
+    <button onclick="getLocationWeather()">Get Weather for My Location</button>
+    <br><br>
+    <input type="text" id="locationInput" placeholder="Enter a location">
+    <button onclick="getWeatherByLocation()">Get Weather</button>
+    <div class="weather-container" id="weatherContainer"></div>
+
+    <script>
+        const apiKey = '96cb5b295fcbe3c5753385cd07eade30';
+        const weatherContainer = document.getElementById('weatherContainer');
+
+        function displayWeather(data) {
+            weatherContainer.innerHTML = `
+                <h2>Weather in ${data.name}</h2>
+                <p>Temperature: ${data.main.temp} °C</p>
+                <p>Weather: ${data.weather[0].description}</p>
+                <p>Humidity: ${data.main.humidity}%</p>
+                <p>Wind Speed: ${data.wind.speed} m/s</p>
+            `;
+        }
+
+        function getWeatherByLocation() {
+            const location = document.getElementById('locationInput').value;
+            if (!location) {
+                weatherContainer.innerHTML = `<p>Please enter a location</p>`;
+                return;
+            }
+
+            fetch(`https://api.openweathermap.org/data/2.5/weather?q=${location}&units=metric&appid=${apiKey}`)
+                .then(response => response.json())
+                .then(data => {
+                    console.log(data); // Debugging: log the API response
+                    if (data.cod === 200) {
+                        displayWeather(data);
+                    } else {
+                        weatherContainer.innerHTML = `<p>Location not found: ${data.message}</p>`;
+                    }
+                })
+                .catch(error => {
+                    console.error(error); // Debugging: log the error
+                    weatherContainer.innerHTML = `<p>Error fetching weather data: ${error.message}</p>`;
+                });
+        }
+
+        function getLocationWeather() {
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(position => {
+                    const lat = position.coords.latitude;
+                    const lon = position.coords.longitude;
+                    fetch(`https://api.openweathermap.org/data/2.5/weather?lat=${lat}&lon=${lon}&units=metric&appid=${apiKey}`)
+                        .then(response => response.json())
+                        .then(data => {
+                            console.log(data); // Debugging: log the API response
+                            if (data.cod === 200) {
+                                displayWeather(data);
+                            } else {
+                                weatherContainer.innerHTML = `<p>Location not found: ${data.message}</p>`;
+                            }
+                        })
+                        .catch(error => {
+                            console.error(error); // Debugging: log the error
+                            weatherContainer.innerHTML = `<p>Error fetching weather data: ${error.message}</p>`;
+                        });
+                }, error => {
+                    console.error(error); // Debugging: log geolocation error
+                    weatherContainer.innerHTML = `<p>Error getting location: ${error.message}</p>`;
+                });
+            } else {
+                weatherContainer.innerHTML = `<p>Geolocation is not supported by this browser</p>`;
+            }
+        }
+    </script>
+</body>
+</html>
